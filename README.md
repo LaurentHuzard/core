@@ -1,4 +1,4 @@
-# API Platform Core
+# API Platform Core 
 
 API Platform Core is an easy-to-use and powerful system to create [hypermedia-driven REST](https://en.wikipedia.org/wiki/HATEOAS) and [GraphQL](https://graphql.org/) APIs.
 It is a component of the [API Platform framework](https://api-platform.com) and it can be integrated
