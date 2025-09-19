@@ -62,7 +62,7 @@ final class LinkedDataPlatformProcessor implements ProcessorInterface
                 if ($op->getUriTemplate() === $operation->getUriTemplate()) {
                     $allowedMethods[] = $method = $op->getMethod();
                     if ('POST' === $method && $outputFormats = $op->getOutputFormats()) {
-                        $acceptPost = $outputFormats;
+                        $acceptPost = array_map('strval', $outputFormats);
                     }
                 }
             }

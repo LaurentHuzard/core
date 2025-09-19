@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatform\State\Tests\Processor;
 
+use ApiPlatform\Hal\Tests\Fixtures\Dummy;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Error;
@@ -51,11 +52,11 @@ class LinkedDataPlatformProcessorTest extends TestCase
             ->willReturn(
                 new ResourceMetadataCollection('DummyResource', [
                     new ApiResource(operations: [
-                        new Get(uriTemplate: '/dummy_resources/{dummyResourceId}{._format}', class: 'DummyResource', name: 'get'),
-                        new GetCollection(uriTemplate: '/dummy_resources{._format}', class: 'DummyResource', name: 'get_collections'),
-                        new Post(uriTemplate: '/dummy_resources{._format}', outputFormats: ['jsonld' => ['application/ld+json'], 'text/turtle' => ['text/turtle']], class: 'DummyResource', name: 'post'),
-                        new Delete(uriTemplate: '/dummy_resources/{dummyResourceId}{._format}', class: 'DummyResource', name: 'delete'),
-                        new Put(uriTemplate: '/dummy_resources/{dummyResourceId}{._format}', class: 'DummyResource', name: 'put'),
+                        new Get(uriTemplate: '/dummy/{dummyResourceId}{._format}', class: 'DummyResource', name: 'get'),
+                        new GetCollection(uriTemplate: '/dummy{._format}', class: 'DummyResource', name: 'get_collections'),
+                        new Post(uriTemplate: '/dummy{._format}', outputFormats: ['jsonld' => ['application/ld+json'], 'text/turtle' => ['text/turtle']], class: 'DummyResource', name: 'post'),
+                        new Delete(uriTemplate: '/dummy/{dummyResourceId}{._format}', class: 'DummyResource', name: 'delete'),
+                        new Put(uriTemplate: '/dummy/{dummyResourceId}{._format}', class: 'DummyResource', name: 'put'),
                     ]),
                 ])
             );
@@ -66,8 +67,8 @@ class LinkedDataPlatformProcessorTest extends TestCase
 
     public function testHeadersAcceptPostIsReturnWhenPostAllowed(): void
     {
-//        $operation = (new HttpOperation('GET', '/dummy_resources{._format}', class: 'DummyResource'));
-        $operation = new Get('/dummy_resources{._format}');
+//        $operation = (new HttpOperation('GET', '/dummy{._format}', class: 'DummyResource'));
+        $operation = new Get('/dummy{._format}');
 
         $context = $this->getContext();
 
@@ -84,8 +85,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
 
     public function testHeadersAcceptPostIsNotSetWhenPostIsNotAllowed(): void
     {
-//        $operation = (new HttpOperation('GET', '/dummy_resources/{dummyResourceId}{._format}', class: 'DummyResource'));
-        $operation = new Get('/dummy_resources/{dummyResourceId}{._format}');
+        $operation = new Get('/dummy/{dummyResourceId}{._format}', class:Dummy::class);
         $context = $this->getContext();
 
         $processor = new LinkedDataPlatformProcessor(
@@ -101,7 +101,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
 
     public function testHeaderAllowReflectsResourceAllowedMethods(): void
     {
-        $operation = new Get('/dummy_resources{._format}');
+        $operation = new Get('/dummy{._format}', class: Dummy::class);
         $context = $this->getContext();
 
         $processor = new LinkedDataPlatformProcessor(
@@ -117,8 +117,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
         $this->assertStringContainsString('GET', $allowHeader);
         $this->assertStringContainsString('POST', $allowHeader);
 
-//        $operation = (new HttpOperation('GET', '/dummy_resources/{dummyResourceId}{._format}', class: 'DummyResource'));
-        $operation = new Get('/dummy_resources/{dummyResourceId}{._format}');
+        $operation = new Get('/dummy/{dummyResourceId}{._format}');
 
 
         /** @var Response $response */
@@ -158,7 +157,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
     private function getContext(): array
     {
         return [
-            'resource_class' => 'DummyResource',
+            'resource_class' => 'Dummy',
             'request' => $this->createGetRequest(),
         ];
     }
