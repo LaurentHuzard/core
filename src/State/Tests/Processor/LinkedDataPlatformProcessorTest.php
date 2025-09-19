@@ -26,6 +26,7 @@ use ApiPlatform\Metadata\Resource\ResourceMetadataCollection;
 use ApiPlatform\Metadata\ResourceClassResolverInterface;
 use ApiPlatform\State\Processor\LinkedDataPlatformProcessor;
 use ApiPlatform\State\ProcessorInterface;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\DummyGetPostDeleteOperation;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -166,6 +167,6 @@ class LinkedDataPlatformProcessorTest extends TestCase
      */
     private function getResourceClassName(): string
     {
-        return 'DummyResource';
+        return Dummy::class;
     }
 }
