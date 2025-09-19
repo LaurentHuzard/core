@@ -68,7 +68,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
     public function testHeadersAcceptPostIsReturnWhenPostAllowed(): void
     {
         /** @var class-string $dummy */
-        $dummy = "dummy";
+        $dummy = 'dummy';
         $operation = new Get('/dummy{._format}', class: $dummy);
 
         $context = $this->getContext();
@@ -86,7 +86,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
 
     public function testHeadersAcceptPostIsNotSetWhenPostIsNotAllowed(): void
     {
-        $operation = new Get('/dummy/{dummyResourceId}{._format}', class:Dummy::class);
+        $operation = new Get('/dummy/{dummyResourceId}{._format}', class: Dummy::class);
         $context = $this->getContext();
 
         $processor = new LinkedDataPlatformProcessor(
@@ -122,7 +122,6 @@ class LinkedDataPlatformProcessorTest extends TestCase
         /** @var class-string $dummy */
         $dummy = 'dummy';
         $operation = new Get('/dummy/{dummyResourceId}{._format}', class: $dummy);
-
 
         /** @var Response $response */
         $processor = new LinkedDataPlatformProcessor(
