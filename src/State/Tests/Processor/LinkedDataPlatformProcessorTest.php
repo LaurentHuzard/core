@@ -162,9 +162,6 @@ class LinkedDataPlatformProcessorTest extends TestCase
         ];
     }
 
-    /**
-     * @return class-string
-     */
     private function getResourceClassName(): string
     {
         return Dummy::class;
