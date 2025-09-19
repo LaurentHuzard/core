@@ -18,5 +18,5 @@ use ApiPlatform\Metadata\ApiResource;
 #[ApiResource()]
 class Dummy
 {
-    private int $id;
+    public int $id;
 }
