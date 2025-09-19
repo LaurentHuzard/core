@@ -61,14 +61,14 @@ final class LinkedDataPlatformProcessor implements ProcessorInterface
             foreach ($resource->getOperations() as $op) {
                 if ($op->getUriTemplate() === $operation->getUriTemplate()) {
                     $allowedMethods[] = $method = $op->getMethod();
-                    if ('POST' === $method && $outputFormats = $op->getOutputFormats()) {
-                        $acceptPost = array_map('strval', $outputFormats);
+                    if ('POST' === $method && \is_array($outputFormats = $op->getOutputFormats())) {
+                        $acceptPost = implode(', ', array_merge(...array_values($outputFormats)));
                     }
                 }
             }
         }
         if ($acceptPost) {
-            $response->headers->set('Accept-Post', implode(', ', array_values($acceptPost)));
+            $response->headers->set('Accept-Post', $acceptPost);
         }
 
         $response->headers->set('Allow', implode(', ', $allowedMethods));

@@ -67,8 +67,9 @@ class LinkedDataPlatformProcessorTest extends TestCase
 
     public function testHeadersAcceptPostIsReturnWhenPostAllowed(): void
     {
-//        $operation = (new HttpOperation('GET', '/dummy{._format}', class: 'DummyResource'));
-        $operation = new Get('/dummy{._format}');
+        /** @var class-string $dummy */
+        $dummy = "dummy";
+        $operation = new Get('/dummy{._format}', class: $dummy);
 
         $context = $this->getContext();
 
@@ -101,7 +102,9 @@ class LinkedDataPlatformProcessorTest extends TestCase
 
     public function testHeaderAllowReflectsResourceAllowedMethods(): void
     {
-        $operation = new Get('/dummy{._format}', class: Dummy::class);
+        /** @var class-string $dummy */
+        $dummy = 'dummy';
+        $operation = new Get('/dummy{._format}', class: $dummy);
         $context = $this->getContext();
 
         $processor = new LinkedDataPlatformProcessor(
@@ -116,8 +119,9 @@ class LinkedDataPlatformProcessorTest extends TestCase
         $this->assertStringContainsString('HEAD', $allowHeader);
         $this->assertStringContainsString('GET', $allowHeader);
         $this->assertStringContainsString('POST', $allowHeader);
-
-        $operation = new Get('/dummy/{dummyResourceId}{._format}');
+        /** @var class-string $dummy */
+        $dummy = 'dummy';
+        $operation = new Get('/dummy/{dummyResourceId}{._format}', class: $dummy);
 
 
         /** @var Response $response */
