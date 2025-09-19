@@ -50,13 +50,13 @@ class LinkedDataPlatformProcessorTest extends TestCase
         $this->resourceMetadataCollectionFactory
             ->method('create')
             ->willReturn(
-                new ResourceMetadataCollection('DummyResource', [
+                new ResourceMetadataCollection($this->getResourceClassName(), [
                     new ApiResource(operations: [
-                        new Get(uriTemplate: '/dummy/{dummyResourceId}{._format}', class: 'DummyResource', name: 'get'),
-                        new GetCollection(uriTemplate: '/dummy{._format}', class: 'DummyResource', name: 'get_collections'),
-                        new Post(uriTemplate: '/dummy{._format}', outputFormats: ['jsonld' => ['application/ld+json'], 'text/turtle' => ['text/turtle']], class: 'DummyResource', name: 'post'),
-                        new Delete(uriTemplate: '/dummy/{dummyResourceId}{._format}', class: 'DummyResource', name: 'delete'),
-                        new Put(uriTemplate: '/dummy/{dummyResourceId}{._format}', class: 'DummyResource', name: 'put'),
+                        new Get(uriTemplate: '/dummy/{dummyResourceId}{._format}', class: $this->getResourceClassName(), name: 'get'),
+                        new GetCollection(uriTemplate: '/dummy{._format}', class: $this->getResourceClassName(), name: 'get_collections'),
+                        new Post(uriTemplate: '/dummy{._format}', outputFormats: ['jsonld' => ['application/ld+json'], 'text/turtle' => ['text/turtle']], class: $this->getResourceClassName(), name: 'post'),
+                        new Delete(uriTemplate: '/dummy/{dummyResourceId}{._format}', class: $this->getResourceClassName(), name: 'delete'),
+                        new Put(uriTemplate: '/dummy/{dummyResourceId}{._format}', class: $this->getResourceClassName(), name: 'put'),
                     ]),
                 ])
             );
@@ -69,7 +69,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
     {
         /** @var class-string $dummy */
         $dummy = 'dummy';
-        $operation = new Get('/dummy{._format}', class: $dummy);
+        $operation = new Get('/dummy{._format}', class: $this->getResourceClassName());
 
         $context = $this->getContext();
 
@@ -86,7 +86,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
 
     public function testHeadersAcceptPostIsNotSetWhenPostIsNotAllowed(): void
     {
-        $operation = new Get('/dummy/{dummyResourceId}{._format}', class: Dummy::class);
+        $operation = new Get('/dummy/{dummyResourceId}{._format}', class: $this->getResourceClassName());
         $context = $this->getContext();
 
         $processor = new LinkedDataPlatformProcessor(
@@ -102,9 +102,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
 
     public function testHeaderAllowReflectsResourceAllowedMethods(): void
     {
-        /** @var class-string $dummy */
-        $dummy = 'dummy';
-        $operation = new Get('/dummy{._format}', class: $dummy);
+        $operation = new Get('/dummy{._format}', class: $this->getResourceClassName());
         $context = $this->getContext();
 
         $processor = new LinkedDataPlatformProcessor(
@@ -119,9 +117,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
         $this->assertStringContainsString('HEAD', $allowHeader);
         $this->assertStringContainsString('GET', $allowHeader);
         $this->assertStringContainsString('POST', $allowHeader);
-        /** @var class-string $dummy */
-        $dummy = 'dummy';
-        $operation = new Get('/dummy/{dummyResourceId}{._format}', class: $dummy);
+        $operation = new Get('/dummy/{dummyResourceId}{._format}', class: $this->getResourceClassName());
 
         /** @var Response $response */
         $processor = new LinkedDataPlatformProcessor(
@@ -160,8 +156,16 @@ class LinkedDataPlatformProcessorTest extends TestCase
     private function getContext(): array
     {
         return [
-            'resource_class' => 'Dummy',
+            'resource_class' => $this->getResourceClassName(),
             'request' => $this->createGetRequest(),
         ];
+    }
+
+    /**
+     * @return class-string
+     */
+    private function getResourceClassName(): string
+    {
+        return 'DummyResource';
     }
 }
