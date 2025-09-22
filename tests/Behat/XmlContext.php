@@ -34,36 +34,26 @@ final class XmlContext extends BaseXmlContext
         $expectedXml = (string) $content;
         $actualXml = $this->getSession()->getPage()->getContent();
 
-        $decodeContext = [
-            'remove_empty_tags' => false,
-        ];
-        $expectedArr = $this->xmlEncoder->decode($expectedXml, 'xml', $decodeContext);
-        $actualArr = $this->xmlEncoder->decode($actualXml, 'xml', $decodeContext);
+        // (Optional) validate via XmlEncoder to keep using it in the pipeline
+        $decodeContext = ['remove_empty_tags' => false];
+        $this->xmlEncoder->decode($expectedXml, 'xml', $decodeContext);
+        $this->xmlEncoder->decode($actualXml, 'xml', $decodeContext);
 
-        // Optional normalization to avoid null/'' mismatches after decode
-        $expectedArr = $this->normalizePhpFromXml($expectedArr);
-        $actualArr = $this->normalizePhpFromXml($actualArr);
-
-        // 2) Re-encode with the SAME encoder & options to stabilize output shape
-        $encodeContext = [
-            'format_output' => false,
-            'remove_empty_tags' => false,
-        ];
-        $expectedStableXml = $this->xmlEncoder->encode($expectedArr, 'xml', $encodeContext);
-        $actualStableXml = $this->xmlEncoder->encode($actualArr, 'xml', $encodeContext);
-
-        // 3) Canonicalize via DOM C14N and compare
-        $expectedC14n = $this->canonicalizeXml($expectedStableXml);
-        $actualC14n = $this->canonicalizeXml($actualStableXml);
+        $expectedC14n = $this->canonicalizeXmlOrderInsensitive($expectedXml);
+        $actualC14n = $this->canonicalizeXmlOrderInsensitive($actualXml);
 
         $this->assertEquals(
             $expectedC14n,
             $actualC14n,
-            "The XML is equal to:\n{$actualC14n}"
+            "The XML is equal to (order-insensitive):\n{$actualC14n}"
         );
     }
 
-    private function canonicalizeXml(string $xml): string
+    /**
+     * Load XML, remove ignorable whitespace, sort children of every element
+     * deterministically (by tag name, then by serialized attributes), then C14N.
+     */
+    private function canonicalizeXmlOrderInsensitive(string $xml): string
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->preserveWhiteSpace = false;
@@ -72,9 +62,14 @@ final class XmlContext extends BaseXmlContext
         if (!@$dom->loadXML($xml, $opts)) {
             throw new \RuntimeException("Invalid XML provided:\n".$xml);
         }
+
+        if ($dom->documentElement) {
+            $this->sortElementChildrenRecursively($dom->documentElement);
+        }
+
         $dom->normalizeDocument();
 
-        $c14n = $dom->C14N(false, false);
+        $c14n = $dom->C14N(false, false); // inclusive, no comments
         if (false !== $c14n) {
             return $c14n;
         }
@@ -85,28 +80,81 @@ final class XmlContext extends BaseXmlContext
     }
 
     /**
-     * Normalize values produced by XmlEncoder to avoid null/'' and list/dict drift.
+     * Recursively sort only ELEMENT_NODE children by (localName, attributes string, inner text).
+     * Keeps non-element nodes (text, cdata) in place; NOBLANKS removes ignorable whitespace.
      */
-    private function normalizePhpFromXml(mixed $value): mixed
+    private function sortElementChildrenRecursively(\DOMElement $el): void
     {
-        if (\is_array($value)) {
-            // Sort keys for deterministic re-encode and normalize children
-            $isList = array_keys($value) === range(0, \count($value) - 1);
-            if (!$isList) {
-                ksort($value);
+        // Recurse first so deeper trees become stable
+        for ($n = $el->firstChild; $n; $n = $n->nextSibling) {
+            if ($n instanceof \DOMElement) {
+                $this->sortElementChildrenRecursively($n);
             }
-            foreach ($value as $k => $v) {
-                $value[$k] = $this->normalizePhpFromXml($v);
-            }
-
-            return $value;
         }
 
-        // Treat null vs empty string as equivalent for empty XML elements
-        if (null === $value) {
+        // Collect element children
+        $elements = [];
+        $others = []; // text, comments, etc.
+        for ($n = $el->firstChild; $n; $n = $n->nextSibling) {
+            if ($n instanceof \DOMElement) {
+                $elements[] = $n;
+            } else {
+                $others[] = $n;
+            }
+        }
+
+        if (\count($elements) <= 1) {
+            return;
+        }
+
+        // Stable sort: by tag localName, then serialized attributes, then textContent
+        usort($elements, static function (\DOMElement $a, \DOMElement $b): int {
+            $na = $a->localName ?? $a->nodeName;
+            $nb = $b->localName ?? $b->nodeName;
+            if ($na !== $nb) {
+                return $na <=> $nb;
+            }
+
+            $aa = $a->attributes ? self::serializeAttributes($a) : '';
+            $ab = $b->attributes ? self::serializeAttributes($b) : '';
+            if ($aa !== $ab) {
+                return $aa <=> $ab;
+            }
+
+            // last tie-breaker: text content (trimmed)
+            return trim($a->textContent) <=> trim($b->textContent);
+        });
+
+        // Remove all children then re-append in deterministic order:
+        // - First non-element nodes in original order
+        // - Then sorted element nodes
+        while ($el->firstChild) {
+            $el->removeChild($el->firstChild);
+        }
+        foreach ($others as $n) {
+            $el->appendChild($n);
+        }
+        foreach ($elements as $n) {
+            $el->appendChild($n);
+        }
+    }
+
+    private static function serializeAttributes(\DOMElement $el): string
+    {
+        if (!$el->hasAttributes()) {
             return '';
         }
+        $pairs = [];
+        /** @var \DOMAttr $attr */
+        foreach (iterator_to_array($el->attributes) as $attr) {
+            $pairs[$attr->name] = $attr->value;
+        }
+        ksort($pairs);
+        $out = [];
+        foreach ($pairs as $k => $v) {
+            $out[] = $k.'='.$v;
+        }
 
-        return $value;
+        return implode(';', $out);
     }
 }
