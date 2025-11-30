@@ -258,6 +258,7 @@ final class ApiPlatformExtension extends Extension implements PrependExtensionIn
         $loader->load('symfony/symfony.php');
         $loader->load('api.php');
         $loader->load('filter.php');
+        $loader->load('ldp.php');
 
         if (class_exists(UuidDenormalizer::class) && class_exists(Uuid::class)) {
             $loader->load('ramsey_uuid.php');
@@ -294,6 +295,7 @@ final class ApiPlatformExtension extends Extension implements PrependExtensionIn
         $container->setParameter('api_platform.patch_formats', $patchFormats);
         $container->setParameter('api_platform.error_formats', $errorFormats);
         $container->setParameter('api_platform.docs_formats', $docsFormats);
+        $container->setParameter('api_platform.ldp.enabled', $config['ldp']['enabled']);
         $container->setParameter('api_platform.jsonschema_formats', []);
         $container->setParameter('api_platform.eager_loading.enabled', $this->isConfigEnabled($container, $config['eager_loading']));
         $container->setParameter('api_platform.eager_loading.max_joins', $config['eager_loading']['max_joins']);

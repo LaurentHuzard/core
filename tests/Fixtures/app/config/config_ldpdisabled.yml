@@ -1,0 +1,6 @@
+imports:
+    - { resource: config_sqlite.yml }
+
+api_platform:
+    ldp:
+        enabled: false
