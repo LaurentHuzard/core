@@ -64,7 +64,7 @@ class LinkDataPlatformTest extends ApiTestCase
         $this->assertResponseHeaderSame('accept-post', 'application/ld+json, application/hal+json, application/vnd.api+json, application/xml, text/xml, application/json, text/html, application/graphql, multipart/form-data');
     }
 
-    public function testAcceptPostHeaderDoesNotExistResourceWithoutPost(): void
+    public function testAcceptPostHeaderDoesNotExistForResourceWithoutPost(): void
     {
         $client = static::createClient();
         $client->request('GET', '/dummy_get_post_delete_operations/1', [

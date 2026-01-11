@@ -27,13 +27,16 @@ use ApiPlatform\Metadata\Post;
     ),
     new GetCollection(
         uriTemplate: '/dummy_get_post_delete_operations',
-        provider: [self::class, 'provide'], ),
+        provider: [self::class, 'provide'],
+    ),
     new Post(
         uriTemplate: '/dummy_get_post_delete_operations',
-        provider: [self::class, 'provide'], ),
+        provider: [self::class, 'provide'],
+    ),
     new Delete(
         uriTemplate: '/dummy_get_post_delete_operations/{id}',
-        provider: [self::class, 'provideItem'], ),
+        provider: [self::class, 'provideItem'],
+    ),
 ])]
 class DummyGetPostDeleteOperation
 {

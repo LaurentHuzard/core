@@ -117,7 +117,6 @@ class LinkedDataPlatformProcessorTest extends TestCase
         $this->assertStringContainsString('POST', $allowHeader);
         $operation = new Get('/dummy/{dummyResourceId}{._format}', class: Dummy::class);
 
-        /** @var Response $response */
         $processor = new LinkedDataPlatformProcessor(
             $this->decorated,
             $this->resourceClassResolver,
