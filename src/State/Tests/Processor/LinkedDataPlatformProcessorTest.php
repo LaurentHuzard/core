@@ -65,7 +65,7 @@ class LinkedDataPlatformProcessorTest extends TestCase
         $this->decorated->method('process')->willReturn(new Response());
     }
 
-    public function testHeadersAcceptPostIsReturnWhenPostAllowed(): void
+    public function testHeadersAcceptPostIsReturnedWhenPostAllowed(): void
     {
         $operation = new Get('/dummy{._format}', class: Dummy::class);
 
