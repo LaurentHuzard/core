@@ -142,13 +142,13 @@ abstract class UuidFilterBaseTestCase extends ApiTestCase
         $manager->persist($this->createDevice());
         $manager->flush();
 
-        $response = self::createClient()->request('GET', '/'.$this->getUrlPrefix().'_devices', [
+        self::createClient()->request('GET', '/'.$this->getUrlPrefix().'_devices', [
             'query' => [
                 'id' => 'invalid-uuid',
             ],
         ]);
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     public function testSearchFilterByManyInvalidUuid(): void
@@ -160,13 +160,13 @@ abstract class UuidFilterBaseTestCase extends ApiTestCase
         $manager->persist($this->createDevice());
         $manager->flush();
 
-        $response = self::createClient()->request('GET', '/'.$this->getUrlPrefix().'_devices', [
+        self::createClient()->request('GET', '/'.$this->getUrlPrefix().'_devices', [
             'query' => [
                 'id' => ['invalid-uuid', 'other-invalid-uuid'],
             ],
         ]);
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     public function testSearchFilterOnManyToOneRelationByUuid(): void
@@ -262,7 +262,7 @@ abstract class UuidFilterBaseTestCase extends ApiTestCase
         $manager->persist($this->createDeviceEndpoint(null, $bazDevice));
         $manager->flush();
 
-        $response = self::createClient()->request('GET', '/'.$this->getUrlPrefix().'_device_endpoints', [
+        self::createClient()->request('GET', '/'.$this->getUrlPrefix().'_device_endpoints', [
             'query' => [
                 'myDevice' => [
                     'invalid-uuid',
@@ -271,7 +271,7 @@ abstract class UuidFilterBaseTestCase extends ApiTestCase
             ],
         ]);
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     public function testGetOpenApiDescription(): void
@@ -311,6 +311,41 @@ abstract class UuidFilterBaseTestCase extends ApiTestCase
                 'explode' => true,
             ],
             array_map(fn ($p) => array_intersect_key($p, ['name' => 1, 'in' => 1, 'required' => 1, 'schema' => 1, 'style' => 1, 'explode' => 1]), $json['paths']['/'.$this->getUrlPrefix().'_device_endpoints']['get']['parameters'])
+        );
+    }
+
+    public function testSearchFilterByUuidNested(): void
+    {
+        $this->recreateSchema(static::getResources());
+
+        $manager = $this->getManager();
+        $manager->persist($fooDevice = $this->createDevice());
+        $manager->persist($barDevice = $this->createDevice());
+        $manager->persist($this->createDeviceEndpoint(null, $fooDevice));
+        $manager->persist($expectedDeviceEndpoint = $this->createDeviceEndpoint(null, $barDevice));
+        $manager->flush();
+
+        $response = self::createClient()->request('GET', '/'.$this->getUrlPrefix().'_device_endpoints', [
+            'query' => [
+                'myDeviceExternalIdAlias' => (string) $expectedDeviceEndpoint->myDevice->externalId,
+            ],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $json = $response->toArray();
+
+        self::assertArraySubset(['hydra:totalItems' => 1], $json);
+        self::assertArraySubset(
+            [
+                'hydra:member' => [
+                    [
+                        '@id' => '/'.$this->getUrlPrefix().'_device_endpoints/'.$expectedDeviceEndpoint->id,
+                        '@type' => $this->geTypePrefix().'DeviceEndpoint',
+                        'id' => (string) $expectedDeviceEndpoint->id,
+                    ],
+                ],
+            ],
+            $json
         );
     }
 
